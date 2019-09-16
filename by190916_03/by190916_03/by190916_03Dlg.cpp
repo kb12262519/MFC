@@ -52,6 +52,9 @@ END_MESSAGE_MAP()
 
 Cby19091603Dlg::Cby19091603Dlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_BY190916_03_DIALOG, pParent)
+	, m_a(0)
+	, m_b(0)
+	, m_c(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -59,6 +62,9 @@ Cby19091603Dlg::Cby19091603Dlg(CWnd* pParent /*=nullptr*/)
 void Cby19091603Dlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_EDIT1, m_a);
+	DDX_Text(pDX, IDC_EDIT3, m_b);
+	DDX_Text(pDX, IDC_EDIT5, m_c);
 }
 
 BEGIN_MESSAGE_MAP(Cby19091603Dlg, CDialogEx)
@@ -101,7 +107,9 @@ BOOL Cby19091603Dlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
-
+	SetDlgItemTextW(IDC_EDIT2, _T("+"));
+	SetDlgItemTextW(IDC_EDIT4, _T("="));
+	SetDlgItemTextW(IDC_EDIT5, _T("result"));
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -159,5 +167,7 @@ HCURSOR Cby19091603Dlg::OnQueryDragIcon()
 void Cby19091603Dlg::OnBnClickedButton1()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-
+	UpdateData(true);
+	m_c = m_a + m_b;
+	UpdateData(false);
 }
