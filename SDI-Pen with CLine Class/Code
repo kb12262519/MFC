@@ -1,0 +1,207 @@
+// CPen2View.cpp: CCPen2View 클래스의 구현
+//
+
+#include "pch.h"
+#include "framework.h"
+// SHARED_HANDLERS는 미리 보기, 축소판 그림 및 검색 필터 처리기를 구현하는 ATL 프로젝트에서 정의할 수 있으며
+// 해당 프로젝트와 문서 코드를 공유하도록 해 줍니다.
+#ifndef SHARED_HANDLERS
+#include "CPen2.h"
+#endif
+
+#include "CLine.h"
+#include "CPen2Doc.h"
+#include "CPen2View.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+
+// CCPen2View
+
+IMPLEMENT_DYNCREATE(CCPen2View, CView)
+
+BEGIN_MESSAGE_MAP(CCPen2View, CView)
+	// 표준 인쇄 명령입니다.
+	ON_COMMAND(ID_FILE_PRINT, &CView::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
+	ON_COMMAND(ID_COL_SEL, &CCPen2View::OnColSel)
+	ON_WM_MOUSEMOVE()
+END_MESSAGE_MAP()
+
+// CCPen2View 생성/소멸
+
+CCPen2View::CCPen2View() noexcept
+{
+	// TODO: 여기에 생성 코드를 추가합니다.
+
+}
+
+CCPen2View::~CCPen2View()
+{
+}
+
+BOOL CCPen2View::PreCreateWindow(CREATESTRUCT& cs)
+{
+	// TODO: CREATESTRUCT cs를 수정하여 여기에서
+	//  Window 클래스 또는 스타일을 수정합니다.
+
+	return CView::PreCreateWindow(cs);
+}
+
+// CCPen2View 그리기
+
+void CCPen2View::OnDraw(CDC* pDC)
+{
+	CCPen2Doc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+
+	// TODO: 여기에 원시 데이터에 대한 그리기 코드를 추가합니다.
+	int n = pDoc->m_oa.GetSize();
+	CLine* p;
+	for (int i = 0; i < n; i++) {
+		p = (CLine*)pDoc->m_oa[i];
+		p->Draw(pDC);
+	}
+}
+
+
+// CCPen2View 인쇄
+
+BOOL CCPen2View::OnPreparePrinting(CPrintInfo* pInfo)
+{
+	// 기본적인 준비
+	return DoPreparePrinting(pInfo);
+}
+
+void CCPen2View::OnBeginPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
+{
+	// TODO: 인쇄하기 전에 추가 초기화 작업을 추가합니다.
+}
+
+void CCPen2View::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
+{
+	// TODO: 인쇄 후 정리 작업을 추가합니다.
+}
+
+
+// CCPen2View 진단
+
+#ifdef _DEBUG
+void CCPen2View::AssertValid() const
+{
+	CView::AssertValid();
+}
+
+void CCPen2View::Dump(CDumpContext& dc) const
+{
+	CView::Dump(dc);
+}
+
+CCPen2Doc* CCPen2View::GetDocument() const // 디버그되지 않은 버전은 인라인으로 지정됩니다.
+{
+	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CCPen2Doc)));
+	return (CCPen2Doc*)m_pDocument;
+}
+#endif //_DEBUG
+
+
+// CCPen2View 메시지 처리기
+
+COLORREF col;
+void CCPen2View::OnColSel()
+{
+	// TODO: 여기에 명령 처리기 코드를 추가합니다.
+	CColorDialog dlg;
+	if (dlg.DoModal() == IDOK) {
+		col = dlg.GetColor();
+
+	}
+}
+
+
+CPoint pnt;
+void CCPen2View::OnMouseMove(UINT nFlags, CPoint point)
+{
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	if (nFlags == MK_LBUTTON) {
+		CLine* p = new CLine(pnt, point, col);
+		GetDocument()->m_oa.Add(p);
+		Invalidate(false);
+	}
+	pnt = point;
+	CView::OnMouseMove(nFlags, point);
+}
+
+#pragma once
+#include <afx.h>
+class CLine :
+	public CObject
+{
+	CPoint m_From, m_To;
+	COLORREF m_Col;
+public:
+	CLine(CPoint From, CPoint To, COLORREF Col) {
+		m_From = From;
+		m_To = To;
+		m_Col = Col;
+	}
+	void Draw(CDC* pDC) {
+		CPen pen(PS_SOLID, 16, m_Col);
+		pDC->SelectObject(&pen);
+		pDC->MoveTo(m_From);
+		pDC->LineTo(m_To);
+	}
+};
+
+// CPen2Doc.h: CCPen2Doc 클래스의 인터페이스
+//
+
+
+#pragma once
+
+
+class CCPen2Doc : public CDocument
+{
+protected: // serialization에서만 만들어집니다.
+	CCPen2Doc() noexcept;
+	DECLARE_DYNCREATE(CCPen2Doc)
+
+// 특성입니다.
+public:
+	CObArray m_oa;
+// 작업입니다.
+public:
+
+// 재정의입니다.
+public:
+	virtual BOOL OnNewDocument();
+	virtual void Serialize(CArchive& ar);
+#ifdef SHARED_HANDLERS
+	virtual void InitializeSearchContent();
+	virtual void OnDrawThumbnail(CDC& dc, LPRECT lprcBounds);
+#endif // SHARED_HANDLERS
+
+// 구현입니다.
+public:
+	virtual ~CCPen2Doc();
+#ifdef _DEBUG
+	virtual void AssertValid() const;
+	virtual void Dump(CDumpContext& dc) const;
+#endif
+
+protected:
+
+// 생성된 메시지 맵 함수
+protected:
+	DECLARE_MESSAGE_MAP()
+
+#ifdef SHARED_HANDLERS
+	// 검색 처리기에 대한 검색 콘텐츠를 설정하는 도우미 함수
+	void SetSearchContent(const CString& value);
+#endif // SHARED_HANDLERS
+};
